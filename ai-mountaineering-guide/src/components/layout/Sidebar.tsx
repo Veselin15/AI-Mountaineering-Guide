@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import { useChat } from 'ai/react'; // Внасяме магията на Vercel AI SDK
+import { useChat } from '@ai-sdk/react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,7 +95,7 @@ export default function Sidebar() {
         <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
           <div className="relative">
             <Input
-              value={input}
+              value={input || ''} // ДОБАВЕНО: || '' предпазва от undefined стойност
               onChange={handleInputChange}
               placeholder="Попитай ме за маршрут..."
               className="pr-10 bg-slate-50 focus-visible:ring-blue-500 rounded-xl"
@@ -106,7 +106,7 @@ export default function Sidebar() {
               size="icon"
               variant="ghost"
               className="absolute right-0 top-0 h-full text-slate-400 hover:text-blue-600 hover:bg-transparent"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input || input.trim() === ''} // ДОБАВЕНО: Безопасна проверка
             >
               <Search size={18} />
             </Button>
