@@ -14,28 +14,26 @@ export default function MapViewer() {
   const [activeLayer, setActiveLayer] = useState<MapLayerType>('bgmountains');
 
   useEffect(() => {
-    if (map.current) return; // Инициализираме картата само веднъж
+    if (map.current) return;
 
     if (mapContainer.current) {
       mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        // Зареждаме основния стил на Mapbox (ще се вижда, когато скрием BGMountains)
         style: 'mapbox://styles/mapbox/outdoors-v12',
-        center: [23.25, 42.60], // Витоша
-        zoom: 11.5,
+        center: [23.28, 42.58], // Леко преместваме центъра към Алеко
+        zoom: 12.5, // Приближаваме малко повече
         pitch: 65,
         bearing: -20,
       });
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      // Когато стилът на Mapbox се зареди напълно, добавяме нашия BGMountains слой отгоре
-      map.current.on('style.load', () => {
+      map.current.on('style.load', async () => {
         if (!map.current) return;
 
-        // 1. Добавяме 3D терена
+        // 1. 3D Терен
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -44,30 +42,74 @@ export default function MapViewer() {
         });
         map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.2 });
 
-        // 2. Добавяме източника за BGMountains
+        // 2. BGMountains слой
         map.current.addSource('bgmountains', {
           type: 'raster',
           tiles: ['https://bgmtile.kade.si/{z}/{x}/{y}.png'],
           tileSize: 256,
           attribution: '<a href="https://bgmountains.org/" target="_blank">© BGMountains</a>'
         });
-
-        // 3. Добавяме самия слой. Той ще покрие Mapbox стила.
         map.current.addLayer({
           id: 'bgmountains-layer',
           type: 'raster',
           source: 'bgmountains',
           minzoom: 0,
           maxzoom: 19,
-          layout: {
-            // Първоначално е видим
-            visibility: 'visible'
-          }
+          layout: { visibility: 'visible' }
         });
+
+        // ==========================================
+        // НОВО: 3. ИЗТЕГЛЯНЕ И РИСУВАНЕ НА МАРШРУТИТЕ
+        // ==========================================
+
+        // Взимаме данните от нашия GeoJSON изглед в Supabase
+        const { data: trails, error } = await supabase.from('trails_geojson').select('*');
+
+        if (error) {
+          console.error('Грешка при изтегляне на маршрутите:', error);
+          return;
+        }
+
+        if (trails && trails.length > 0) {
+          // Форматираме данните в стандартен GeoJSON FeatureCollection
+          const geojsonFeatures = {
+            type: 'FeatureCollection',
+            features: trails.map((t) => ({
+              type: 'Feature',
+              properties: {
+                id: t.id,
+                name: t.name,
+                difficulty: t.difficulty
+              },
+              geometry: t.geojson // Тук вече имаме готовата геометрия от базата!
+            }))
+          };
+
+          // Добавяме ги към картата
+          map.current.addSource('trails-source', {
+            type: 'geojson',
+            data: geojsonFeatures as any
+          });
+
+          // Рисуваме червена линия за маршрута (Слагаме я НАД BGMountains)
+          map.current.addLayer({
+            id: 'trails-line-layer',
+            type: 'line',
+            source: 'trails-source',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#ef4444', // Червен цвят (Tailwind red-500)
+              'line-width': 5,
+              'line-opacity': 0.8
+            }
+          });
+        }
       });
     }
   }, []);
-
   // Този Effect се грижи за превключването на слоевете при клик
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
