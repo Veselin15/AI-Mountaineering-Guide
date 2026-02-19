@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Layers } from 'lucide-react'; // Икона за бутона
-
+import { supabase } from '@/lib/supabaseClient';
 // Дефинираме типовете за възможните стилове
 type MapLayerType = 'bgmountains' | 'mapbox-outdoors';
 
