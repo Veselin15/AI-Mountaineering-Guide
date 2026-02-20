@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.30",
-    "@ai-sdk/react": "^3.0.95",
+    "@ai-sdk/react": "^3.0.96",
     "@supabase/supabase-js": "^2.97.0",
-    "ai": "^6.0.92",
+    "ai": "^6.0.94",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.574.0",
