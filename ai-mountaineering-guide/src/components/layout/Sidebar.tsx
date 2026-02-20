@@ -8,11 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Search, Clock, Mountain, MapPin, Bot, User } from 'lucide-react';
 
 export default function Sidebar() {
-  // useChat автоматично се свързва с нашия сървър в /api/chat
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  // ПРОМЯНА 1: Взимаме 'setInput' вместо проблемния 'handleInputChange'
+  const { messages, input, setInput, handleSubmit, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Автоматично скролиране до най-новото съобщение
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -24,7 +23,6 @@ export default function Sidebar() {
 
   return (
     <aside className="w-96 h-full bg-white shadow-2xl z-20 flex flex-col absolute left-0 top-0 overflow-hidden">
-      {/* Хедър */}
       <div className="p-6 bg-slate-50 border-b border-slate-100 flex-shrink-0">
         <h1 className="text-3xl font-extrabold mb-1 text-slate-800 tracking-tight flex items-center gap-2">
           AI Hiking Guide 🏔️
@@ -32,17 +30,14 @@ export default function Sidebar() {
         <p className="text-sm text-slate-500">Твоят умен планински водач.</p>
       </div>
 
-      {/* Динамична част: Чат или Препоръчани маршрути */}
       <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 flex flex-col gap-4">
-
         {messages.length === 0 ? (
-          // АКО НЯМА ЧАТ: Показваме препоръчаните маршрути
           <>
             <h3 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
               <MapPin size={14} /> Препоръчани маршрути
             </h3>
             {mockRoutes.map((route) => (
-              <Card key={route.id} className="cursor-pointer hover:border-blue-400 transition-colors shadow-sm bg-white">
+              <Card key={route.id} className="cursor-pointer hover:border-blue-400 transition-colors shadow-sm bg-white border-slate-200">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg text-slate-800">{route.title}</CardTitle>
                   <CardDescription className="text-xs">{route.description}</CardDescription>
@@ -63,7 +58,6 @@ export default function Sidebar() {
             ))}
           </>
         ) : (
-          // АКО ИМА ЧАТ: Показваме съобщенията
           <div className="flex flex-col gap-4 pb-4">
             {messages.map(m => (
               <div key={m.id} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -76,11 +70,11 @@ export default function Sidebar() {
               </div>
             ))}
             {isLoading && (
-              <div className="flex gap-3 flex-row">
-                 <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+              <div className="flex gap-3 flex-row items-center">
+                 <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center animate-bounce">
                   <Bot size={16} />
                 </div>
-                <div className="p-3 bg-white border border-slate-100 rounded-2xl rounded-tl-none text-slate-400 text-sm animate-pulse">
+                <div className="p-3 bg-white border border-slate-100 rounded-2xl rounded-tl-none text-slate-400 text-sm">
                   Мисля...
                 </div>
               </div>
@@ -90,13 +84,13 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Поле за писане към AI (Винаги най-долу) */}
       <div className="p-6 border-t border-slate-100 bg-white flex-shrink-0">
         <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
           <div className="relative">
             <Input
-              value={input || ''} // ДОБАВЕНО: || '' предпазва от undefined стойност
-              onChange={handleInputChange}
+              value={input || ''}
+              // ПРОМЯНА 2: Използваме ръчен onChange, който 100% работи и отключва полето
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Попитай ме за маршрут..."
               className="pr-10 bg-slate-50 focus-visible:ring-blue-500 rounded-xl"
               disabled={isLoading}
@@ -106,13 +100,13 @@ export default function Sidebar() {
               size="icon"
               variant="ghost"
               className="absolute right-0 top-0 h-full text-slate-400 hover:text-blue-600 hover:bg-transparent"
-              disabled={isLoading || !input || input.trim() === ''} // ДОБАВЕНО: Безопасна проверка
+              disabled={isLoading || !input || input.trim() === ''}
             >
               <Search size={18} />
             </Button>
           </div>
-          <p className="text-[10px] text-center text-slate-400 mt-1">
-            AI може да допусне грешки. Винаги проверявай условията в планината.
+          <p className="text-[10px] text-center text-slate-400 mt-1 uppercase font-semibold">
+            Планински AI съветник
           </p>
         </form>
       </div>
