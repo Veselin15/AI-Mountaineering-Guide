@@ -5,17 +5,17 @@ import { useChat } from '@ai-sdk/react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Clock, Mountain, MapPin, Bot, User } from 'lucide-react';
+import { Search, Clock, Mountain, MapPin, Bot, User, AlertTriangle } from 'lucide-react';
 
 export default function Sidebar() {
-  // Вече функциите гарантирано ще съществуват
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  // НОВО: Добавихме 'error' в списъка
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, error]);
 
   const mockRoutes = [
     { id: 1, title: "Черни връх (от Алеко)", difficulty: "Средна", time: "3 часа", description: "Класически маршрут до първенеца на Витоша." },
@@ -70,7 +70,8 @@ export default function Sidebar() {
                 </div>
               </div>
             ))}
-            {isLoading && (
+
+            {isLoading && !error && (
               <div className="flex gap-3 flex-row items-center">
                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center animate-bounce">
                   <Bot size={16} />
@@ -80,6 +81,19 @@ export default function Sidebar() {
                 </div>
               </div>
             )}
+
+            {/* НОВО: Показваме червена грешка, ако OpenAI се оплаче */}
+            {error && (
+              <div className="flex gap-3 flex-row items-center">
+                 <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle size={16} />
+                </div>
+                <div className="p-3 bg-red-50 border border-red-200 rounded-2xl rounded-tl-none text-red-700 text-sm break-words max-w-[80%]">
+                  <strong>Отказан достъп:</strong> {error.message}
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
         )}
