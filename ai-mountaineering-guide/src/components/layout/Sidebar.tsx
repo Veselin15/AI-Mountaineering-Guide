@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Search, Clock, Mountain, MapPin, Bot, User } from 'lucide-react';
 
 export default function Sidebar() {
-  // 1. Взимаме стандартните функции от useChat
+  // Вече функциите гарантирано ще съществуват
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -32,7 +32,7 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 flex flex-col gap-4">
-        {messages && messages.length === 0 ? (
+        {messages.length === 0 ? (
           <>
             <h3 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
               <MapPin size={14} /> Препоръчани маршрути
@@ -60,7 +60,7 @@ export default function Sidebar() {
           </>
         ) : (
           <div className="flex flex-col gap-4 pb-4">
-            {messages && messages.map(m => (
+            {messages.map(m => (
               <div key={m.id} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${m.role === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
                   {m.role === 'user' ? <User size={16} /> : <Bot size={16} />}
@@ -86,18 +86,11 @@ export default function Sidebar() {
       </div>
 
       <div className="p-6 border-t border-slate-100 bg-white flex-shrink-0">
-        {/* 2. Защитаваме формата от празни извиквания */}
-        <form className="flex flex-col gap-2" onSubmit={(e) => {
-          e.preventDefault();
-          if (handleSubmit) handleSubmit(e);
-        }}>
+        <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
           <div className="relative">
-            {/* 3. Защитаваме полето от undefined стойности, за да не става read-only */}
             <Input
-              value={input || ''}
-              onChange={(e) => {
-                if (handleInputChange) handleInputChange(e);
-              }}
+              value={input}
+              onChange={handleInputChange}
               placeholder="Попитай ме за маршрут..."
               className="pr-10 bg-slate-50 focus-visible:ring-blue-500 rounded-xl"
               disabled={isLoading}
@@ -107,7 +100,7 @@ export default function Sidebar() {
               size="icon"
               variant="ghost"
               className="absolute right-0 top-0 h-full text-slate-400 hover:text-blue-600 hover:bg-transparent"
-              disabled={isLoading || !input || input.trim() === ''}
+              disabled={isLoading || !input.trim()}
             >
               <Search size={18} />
             </Button>

@@ -9,10 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.30",
-    "@ai-sdk/react": "^3.0.96",
+    "@ai-sdk/openai": "^1.1.13",
+    "@ai-sdk/react": "^1.1.17",
     "@supabase/supabase-js": "^2.97.0",
-    "ai": "^6.0.94",
+    "ai": "^4.1.42",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.574.0",
