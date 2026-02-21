@@ -9,11 +9,10 @@ export async function POST(req: Request) {
     // Parse the incoming messages from the frontend
     const { messages } = await req.json();
 
-    console.log("1. Request received, calling Gemini Pro...");
+    console.log("1. Request received, calling Gemini 2.5 Flash...");
 
-    // Call the Gemini model
+    // Call the Gemini model using the correct and newest version
     const result = await streamText({
-      // FIXED: Using the classic model name that is supported by all SDK versions
       model: google('gemini-2.5-flash'),
       system: `Ти си експертен и ентусиазиран планински водач за България.
       Твоята задача е да помагаш на потребителите да си намират подходящи маршрути, хижи и върхове.

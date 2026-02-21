@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Search, Clock, Mountain, MapPin, Bot, User, AlertTriangle } from 'lucide-react';
 
 export default function Sidebar() {
-  // НОВО: Добавихме 'error' в списъка
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat();
+  // Fetch the complete state from the useChat hook
+  const chatState = useChat();
+  const { messages, append, isLoading, error } = chatState;
+
+  // Create our own robust local state for the input field
+  const [inputValue, setInputValue] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to the bottom when new messages or errors arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, error]);
 
+  // Custom submit handler to manually append the message to the chat
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Prevent submission if input is empty
+    if (!inputValue.trim()) return;
+
+    // Safety check: verify that the append function successfully loaded from the package
+    if (typeof append !== 'function') {
+      console.error("Critical Error: 'append' is not a function. Current chat state:", chatState);
+      return;
+    }
+
+    // Send the user's message to the AI backend
+    append({ role: 'user', content: inputValue });
+
+    // Clear the input field safely
+    setInputValue('');
+  };
+
+  // Mock data for initial recommended routes
   const mockRoutes = [
     { id: 1, title: "Черни връх (от Алеко)", difficulty: "Средна", time: "3 часа", description: "Класически маршрут до първенеца на Витоша." },
     { id: 2, title: "Екопътека Бели Искър", difficulty: "Лесна", time: "2 часа", description: "Живописна пътека с множество мостчета над реката." },
@@ -32,7 +58,7 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 flex flex-col gap-4">
-        {messages.length === 0 ? (
+        {(!messages || messages.length === 0) ? (
           <>
             <h3 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
               <MapPin size={14} /> Препоръчани маршрути
@@ -71,6 +97,7 @@ export default function Sidebar() {
               </div>
             ))}
 
+            {/* Show loading indicator while waiting for the AI response */}
             {isLoading && !error && (
               <div className="flex gap-3 flex-row items-center">
                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center animate-bounce">
@@ -82,7 +109,7 @@ export default function Sidebar() {
               </div>
             )}
 
-            {/* НОВО: Показваме червена грешка, ако OpenAI се оплаче */}
+            {/* Display any error messages generated during the stream */}
             {error && (
               <div className="flex gap-3 flex-row items-center">
                  <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
@@ -94,17 +121,18 @@ export default function Sidebar() {
               </div>
             )}
 
+            {/* Invisible div used for auto-scrolling */}
             <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
       <div className="p-6 border-t border-slate-100 bg-white flex-shrink-0">
-        <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-2" onSubmit={handleSendMessage}>
           <div className="relative">
             <Input
-              value={input}
-              onChange={handleInputChange}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               placeholder="Попитай ме за маршрут..."
               className="pr-10 bg-slate-50 focus-visible:ring-blue-500 rounded-xl"
               disabled={isLoading}
@@ -114,7 +142,7 @@ export default function Sidebar() {
               size="icon"
               variant="ghost"
               className="absolute right-0 top-0 h-full text-slate-400 hover:text-blue-600 hover:bg-transparent"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || inputValue.trim() === ''}
             >
               <Search size={18} />
             </Button>
@@ -126,5 +154,4 @@ export default function Sidebar() {
       </div>
     </aside>
   );
-
 }
