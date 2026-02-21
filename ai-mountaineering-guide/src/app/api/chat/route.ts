@@ -1,22 +1,22 @@
-import { openai } from '@ai-sdk/openai';
+// Import Google provider
+import { google } from '@ai-sdk/google';
 import { streamText } from 'ai';
 
-// Позволяваме на сървъра да обработва заявката до 30 секунди
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // Защита: Проверяваме дали изобщо сме сложили API ключ
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("ГРЕШКА: Липсва OPENAI_API_KEY в .env.local файла!");
-      return new Response('Липсва API ключ', { status: 401 });
+    // Check for Google API Key
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      console.error("ERROR: GOOGLE_GENERATIVE_AI_API_KEY is missing in .env.local!");
+      return new Response('Missing API key', { status: 401 });
     }
 
-    // Извикваме AI модела
-    const result = streamText({
-      model: openai('gpt-4o-mini'), // Бърз и евтин модел
+    // Call Gemini 1.5 Flash model
+    const result = await streamText({
+      model: google('gemini-1.5-flash'),
       system: `Ти си експертен и ентусиазиран планински водач за България.
       Твоята задача е да помагаш на потребителите да си намират подходящи маршрути, хижи и върхове.
       Бъди кратък, точен и винаги давай съвети за безопасност и екипировка, когато е нужно.
@@ -24,12 +24,12 @@ export async function POST(req: Request) {
       messages,
     });
 
-    // Връщаме отговора като поток (stream), за да се изписва буква по буква
+    // Return the response stream
     return result.toDataStreamResponse();
 
   } catch (error) {
-    // Ако нещо гръмне (напр. невалиден ключ или няма интернет), ще го видим в конзолата!
-    console.error('Грешка в AI Бекенда:', error);
+    // Log backend errors to the console
+    console.error('Backend AI Error:', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
